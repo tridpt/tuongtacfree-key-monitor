@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+Thumbs.db
+.DS_Store
+
+# Khong commit config/key ca nhan neu vo tinh copy vao project.
+.claude/
+settings.json

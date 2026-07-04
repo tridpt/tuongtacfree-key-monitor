@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Check API Key</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --panel: #1b1d22;
+      --panel2: #242832;
+      --line: #343946;
+      --text: #f4f6fb;
+      --muted: #aeb6c6;
+      --green: #51d27e;
+      --yellow: #f2c94c;
+      --red: #ff6b6b;
+      --blue: #62a8ff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button, input, select {
+      border: 1px solid var(--line);
+      background: var(--panel2);
+      color: var(--text);
+      border-radius: 8px;
+      font: inherit;
+      min-height: 40px;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #07111f;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .6;
+    }
+
+    input {
+      width: 100%;
+      padding: 0 12px;
+      font-family: Consolas, "JetBrains Mono", monospace;
+    }
+
+    select { padding: 0 10px; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.22);
+    }
+
+    .keybar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    .keyrow {
+      display: grid;
+      gap: 8px;
+    }
+
+    .inputline {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .key-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 10px 0 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill.ok { color: var(--green); }
+    .pill.warn { color: var(--yellow); }
+    .pill.bad { color: var(--red); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 112px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric .value {
+      margin-top: 10px;
+      font-size: 28px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .metric .hint {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 12px;
+      background: #11151d;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 16px 0 6px;
+    }
+
+    .bar > div {
+      height: 100%;
+      width: 0%;
+      background: var(--green);
+      transition: width .25s ease, background .25s ease;
+    }
+
+    .message {
+      display: none;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--panel2);
+      color: var(--muted);
+    }
+
+    .message.bad {
+      display: block;
+      color: var(--red);
+      border-color: rgba(255,107,107,.45);
+    }
+
+    .message.warn {
+      display: block;
+      color: var(--yellow);
+      border-color: rgba(242,201,76,.45);
+    }
+
+    .history {
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+    }
+
+    th {
+      color: var(--muted);
+      background: #151820;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    td.num {
+      font-family: Consolas, "JetBrains Mono", monospace;
+      text-align: right;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 22px 8px;
+    }
+
+    @media (max-width: 900px) {
+      header, .keybar { grid-template-columns: 1fr; display: grid; }
+      .toolbar { justify-content: start; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .wrap { width: min(100% - 20px, 1180px); padding-top: 18px; }
+      .inputline { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      .metric .value { font-size: 24px; }
+      table { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>Check API Key</h1>
+        <p class="sub">Theo doi credit, token, request va lich su su dung cua key tuongtacfree.</p>
+      </div>
+      <div class="toolbar">
+        <select id="refreshEvery" title="Tu dong lam moi">
+          <option value="0">Khong auto</option>
+          <option value="15000">15s</option>
+          <option value="30000" selected>30s</option>
+          <option value="60000">60s</option>
+          <option value="300000">5 phut</option>
+        </select>
+        <button id="refreshBtn" class="primary">Refresh</button>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="keybar">
+        <div class="keyrow">
+          <label for="apiKey">API key muon check</label>
+          <div class="inputline">
+            <input id="apiKey" type="password" placeholder="Nhap sk-... hoac de trong de dung key trong Claude config" autocomplete="off" spellcheck="false" />
+            <button id="toggleKeyBtn" type="button">Hien</button>
+            <button id="saveKeyBtn" class="primary" type="button">Luu key</button>
+          </div>
+          <div class="key-actions">
+            <button id="useConfigBtn" type="button">Dung key trong Claude config</button>
+            <button id="clearBtn" type="button">Xoa key da luu</button>
+          </div>
+          <div class="status">
+            <span id="configStatus" class="pill">Dang doc config...</span>
+            <span id="keySource" class="pill">Dang dung: config</span>
+            <span id="lastUpdated" class="pill">Chua cap nhat</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="notice" class="message"></div>
+
+      <div class="grid">
+        <article class="metric">
+          <div class="label">Credit con lai</div>
+          <div id="creditsRemaining" class="value">--</div>
+          <div id="creditHint" class="hint">--</div>
+        </article>
+        <article class="metric">
+          <div class="label">Credit da dung</div>
+          <div id="creditsUsed" class="value">--</div>
+          <div id="creditLimit" class="hint">--</div>
+        </article>
+        <article class="metric">
+          <div class="label">Token da dung</div>
+          <div id="tokensUsed" class="value">--</div>
+          <div id="tokenLimit" class="hint">--</div>
+        </article>
+        <article class="metric">
+          <div class="label">Requests</div>
+          <div id="requestsCount" class="value">--</div>
+          <div id="lastUsed" class="hint">--</div>
+        </article>
+      </div>
+
+      <div class="bar" aria-label="Credit usage">
+        <div id="usageBar"></div>
+      </div>
+      <div class="status">
+        <span id="keyName" class="pill">Key: --</span>
+        <span id="enabled" class="pill">Status: --</span>
+        <span id="expiresAt" class="pill">Het han: --</span>
+        <span id="warrantyUntil" class="pill">Bao hanh: --</span>
+      </div>
+    </section>
+
+    <section class="panel history">
+      <h2 style="margin:0 0 12px;font-size:18px;">Lich su gan day</h2>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Thoi gian</th>
+              <th class="num">Credit</th>
+              <th class="num">Tokens</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td class="empty" colspan="3">Chua co du lieu.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const STORAGE_KEY = "checkkey_dashboard_manual_key";
+    let timer = null;
+
+    function fmtNumber(value, digits = 2) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
+      return new Intl.NumberFormat("vi-VN", {
+        maximumFractionDigits: digits,
+      }).format(Number(value));
+    }
+
+    function fmtTime(seconds) {
+      if (!seconds || Number(seconds) <= 0) return "--";
+      const d = new Date(Number(seconds) * 1000);
+      return d.toLocaleString("vi-VN");
+    }
+
+    function setNotice(type, text) {
+      const el = $("notice");
+      el.className = "message" + (type ? " " + type : "");
+      el.textContent = text || "";
+      el.style.display = text ? "block" : "none";
+    }
+
+    function setPill(id, text, tone) {
+      const el = $(id);
+      el.textContent = text;
+      el.className = "pill" + (tone ? " " + tone : "");
+    }
+
+    function maskKey(key) {
+      if (!key || key.length < 12) return "";
+      return key.slice(0, 6) + "..." + key.slice(-4);
+    }
+
+    function updateKeySource() {
+      const manualKey = $("apiKey").value.trim();
+      if (manualKey) {
+        setPill("keySource", "Dang dung: key nhap tay " + maskKey(manualKey), "ok");
+      } else {
+        setPill("keySource", "Dang dung: Claude config", "");
+      }
+    }
+
+    function keyPayload() {
+      const key = $("apiKey").value.trim();
+      updateKeySource();
+      return key ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ key }) } : {};
+    }
+
+    async function requestJson(path) {
+      const response = await fetch(path, keyPayload());
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Request failed");
+      return data;
+    }
+
+    async function loadConfig() {
+      try {
+        const response = await fetch("/api/config");
+        const cfg = await response.json();
+        if (cfg.hasKey) {
+          setPill("configStatus", "Config: " + cfg.keyMasked, "ok");
+        } else {
+          setPill("configStatus", "Chua co key trong Claude config", "warn");
+        }
+      } catch (error) {
+        setPill("configStatus", "Khong doc duoc config", "bad");
+      }
+    }
+
+    function loadSavedManualKey() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY) || "";
+        if (saved) {
+          $("apiKey").value = saved;
+          updateKeySource();
+        }
+      } catch (error) {
+        setNotice("warn", "Trinh duyet khong cho luu key, van co the nhap de check tam thoi.");
+      }
+    }
+
+    function saveManualKey() {
+      const key = $("apiKey").value.trim();
+      if (!key) {
+        setNotice("warn", "Nhap API key truoc khi luu.");
+        $("apiKey").focus();
+        return;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, key);
+        setNotice("", "");
+        updateKeySource();
+        refresh();
+      } catch (error) {
+        setNotice("bad", "Khong luu duoc key vao trinh duyet.");
+      }
+    }
+
+    function useConfigKey() {
+      $("apiKey").value = "";
+      updateKeySource();
+      refresh();
+    }
+
+    function clearSavedKey() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (error) {}
+      $("apiKey").value = "";
+      updateKeySource();
+      refresh();
+    }
+
+    function renderInfo(d) {
+      const remaining = Number(d.creditsRemaining);
+      const used = Number(d.creditsUsed);
+      const limit = Number(d.creditLimit);
+      const pctUsed = limit > 0 ? Math.max(0, Math.min(100, (used / limit) * 100)) : 0;
+      const pctRemaining = limit > 0 ? Math.max(0, Math.min(100, (remaining / limit) * 100)) : null;
+
+      $("creditsRemaining").textContent = d.creditsRemaining === -1 ? "Unlimited" : fmtNumber(remaining);
+      $("creditHint").textContent = limit > 0 && pctRemaining !== null ? `Con ${fmtNumber(pctRemaining, 1)}%` : "Khong co gioi han credit";
+      $("creditsUsed").textContent = fmtNumber(used);
+      $("creditLimit").textContent = limit > 0 ? "Gioi han: " + fmtNumber(limit) : "Gioi han: --";
+      $("tokensUsed").textContent = fmtNumber(d.tokensUsed, 0);
+      $("tokenLimit").textContent = Number(d.tokenLimit) > 0 ? "Gioi han: " + fmtNumber(d.tokenLimit, 0) : "Token limit: unlimited";
+      $("requestsCount").textContent = fmtNumber(d.requestsCount, 0);
+      $("lastUsed").textContent = "Lan cuoi: " + fmtTime(d.lastUsedAt);
+
+      $("usageBar").style.width = pctUsed + "%";
+      $("usageBar").style.background = pctRemaining !== null && pctRemaining <= 10 ? "var(--red)" : pctRemaining !== null && pctRemaining <= 25 ? "var(--yellow)" : "var(--green)";
+
+      setPill("keyName", `${d.name || "API Key"} ${d.keyMasked || ""}`.trim(), "");
+      setPill("enabled", d.enabled ? "Dang bat" : "Da tat", d.enabled ? "ok" : "bad");
+      setPill("expiresAt", "Het han: " + fmtTime(d.expiresAt), "");
+      setPill("warrantyUntil", "Bao hanh: " + fmtTime(d.warrantyUntil), "");
+
+      if (!d.found) {
+        setNotice("bad", "Key khong ton tai hoac khong hop le.");
+      } else if (!d.enabled) {
+        setNotice("bad", "Key dang bi tat.");
+      } else if (limit > 0 && remaining <= 0) {
+        setNotice("bad", "Key da het credit.");
+      } else if (limit > 0 && pctRemaining <= 10) {
+        setNotice("warn", `Sap het credit: con ${fmtNumber(remaining)} credit.`);
+      } else {
+        setNotice("", "");
+      }
+
+      $("lastUpdated").textContent = "Cap nhat: " + new Date().toLocaleTimeString("vi-VN");
+    }
+
+    function renderHistory(data) {
+      const events = Array.isArray(data.events) ? data.events.slice(0, 80) : [];
+      if (!events.length) {
+        $("historyBody").innerHTML = '<tr><td class="empty" colspan="3">Chua co lich su.</td></tr>';
+        return;
+      }
+      $("historyBody").innerHTML = events.map((event) => `
+        <tr>
+          <td>${fmtTime(event.t)}</td>
+          <td class="num">${fmtNumber(event.c, 4)}</td>
+          <td class="num">${fmtNumber(event.k, 0)}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function refresh() {
+      $("refreshBtn").disabled = true;
+      $("refreshBtn").textContent = "Dang check...";
+      try {
+        const [info, history] = await Promise.all([
+          requestJson("/api/info"),
+          requestJson("/api/history"),
+        ]);
+        renderInfo(info);
+        renderHistory(history);
+      } catch (error) {
+        setNotice("bad", error.message || "Khong check duoc key.");
+      } finally {
+        $("refreshBtn").disabled = false;
+        $("refreshBtn").textContent = "Refresh";
+      }
+    }
+
+    function schedule() {
+      if (timer) clearInterval(timer);
+      const ms = Number($("refreshEvery").value);
+      if (ms > 0) timer = setInterval(refresh, ms);
+    }
+
+    $("refreshBtn").addEventListener("click", refresh);
+    $("saveKeyBtn").addEventListener("click", saveManualKey);
+    $("useConfigBtn").addEventListener("click", useConfigKey);
+    $("clearBtn").addEventListener("click", clearSavedKey);
+    $("toggleKeyBtn").addEventListener("click", () => {
+      const input = $("apiKey");
+      const visible = input.type === "text";
+      input.type = visible ? "password" : "text";
+      $("toggleKeyBtn").textContent = visible ? "Hien" : "An";
+    });
+    $("apiKey").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") refresh();
+    });
+    $("apiKey").addEventListener("input", updateKeySource);
+    $("refreshEvery").addEventListener("change", schedule);
+
+    loadSavedManualKey();
+    loadConfig().then(refresh);
+    schedule();
+  </script>
+</body>
+</html>
